@@ -17,16 +17,19 @@ export const handleWebhook = async (req, res) => {
 
   try {
     const pr = req.body.pull_request;
-    console.log("PR URL:", pr.url); // ← ADD
-    console.log("Comments URL:", pr.comments_url); // ← ADD
+
+    console.log("PR URL:", pr.url);
+    console.log("Comments URL:", pr.comments_url);
 
     // ✅ Get changed files
     const files = await axios.get(pr.url + "/files", {
       headers: {
-        Authorization: `Bearer ${process.env.GITHUB_TOKEN}`,
+        Authorization: `token ${process.env.GITHUB_TOKEN}`, // 🔥 FIXED
       },
     });
+
     console.log("Files fetched ✅");
+
     let code = "";
 
     files.data.forEach((file) => {
@@ -35,10 +38,10 @@ export const handleWebhook = async (req, res) => {
       }
     });
 
-    // 🔥 Limit size (important)
+    // 🔥 Limit size
     code = code.slice(0, 5000);
 
-    // ✅ Call your AI reviewer
+    // ✅ Call AI reviewer
     const aiRes = await axios.post("http://localhost:5001/api/review", {
       code,
     });
@@ -64,7 +67,7 @@ ${explanation}
       { body: comment },
       {
         headers: {
-          Authorization: `Bearer ${process.env.GITHUB_TOKEN}`,
+          Authorization: `token ${process.env.GITHUB_TOKEN}`, // 🔥 FIXED
         },
       },
     );
@@ -73,7 +76,12 @@ ${explanation}
 
     res.sendStatus(200);
   } catch (err) {
-    console.error("FULL ERROR:", err.response?.data || err.message);
+    // 🔥 STRONG DEBUG
+    console.error("STATUS:", err.response?.status);
+    console.error("DATA:", err.response?.data);
+    console.error("HEADERS:", err.response?.headers);
+    console.error("MESSAGE:", err.message);
+
     res.sendStatus(500);
   }
 };
