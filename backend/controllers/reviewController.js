@@ -19,10 +19,9 @@ export const reviewCode = async (req, res) => {
     const prompt = `
 You are a strict code reviewer.
 
-Analyze the code carefully.
+Return ONLY valid JSON. No explanation outside JSON.
 
-Respond ONLY in valid JSON format:
-
+Format:
 {
   "bugs": ["list ALL bugs including syntax errors"],
   "suggestions": ["short improvements"],
@@ -30,44 +29,49 @@ Respond ONLY in valid JSON format:
 }
 
 Rules:
-- ALWAYS report syntax errors if present
-- NEVER say "no bugs" if code is invalid
-- Return ONLY raw JSON
-- No markdown or extra text
-- Keep response short
+- ALWAYS report syntax errors
+- DO NOT add extra text
+- DO NOT use markdown
 
 Code:
 ${code}
 `;
 
+    // ✅ Groq API call (FINAL FIX)
     const response = await axios.post(
-      "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent",
+      "https://api.groq.com/openai/v1/chat/completions",
       {
-        contents: [{ parts: [{ text: prompt }] }],
-        generationConfig: {
-          maxOutputTokens: 200,
-        },
+        model: "llama-3.1-8b-instant",
+        messages: [
+          {
+            role: "user",
+            content: prompt,
+          },
+        ],
+        temperature: 0.2,
       },
       {
-        params: { key: process.env.GEMINI_API_KEY },
+        headers: {
+          Authorization: `Bearer ${process.env.GROQ_API_KEY}`,
+          "Content-Type": "application/json",
+        },
       },
     );
 
-    const text = response.data.candidates[0].content.parts[0].text;
+    const text = response.data.choices[0].message.content;
 
     console.log("Raw AI Response:", text);
 
     // ✅ Clean response
     let cleanedText = text.trim();
 
-    // 🔥 Remove markdown + backticks
     cleanedText = cleanedText
       .replace(/```json/gi, "")
       .replace(/```/g, "")
       .replace(/`/g, "")
       .trim();
 
-    // 🔥 Extract JSON safely
+    // ✅ Extract JSON safely
     const match = cleanedText.match(/\{[\s\S]*\}/);
 
     if (match) {
@@ -90,19 +94,20 @@ ${code}
       };
     }
 
-    // ✅ Send response to frontend
+    // ✅ Final response
     res.json({
       bugs: parsed.bugs || [],
       suggestions: parsed.suggestions || [],
       explanation: parsed.explanation || "",
     });
   } catch (error) {
-    console.error("Error:", error.message);
+    console.error("GROQ ERROR:", error.response?.data || error.message);
 
-    res.status(500).json({
-      bugs: ["Server error"],
-      suggestions: [],
-      explanation: "Error reviewing code",
+    // ✅ fallback (important)
+    res.json({
+      bugs: ["AI service unavailable"],
+      suggestions: ["Check code manually"],
+      explanation: "Fallback response used",
     });
   }
 };
