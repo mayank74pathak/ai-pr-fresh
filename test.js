@@ -1,6 +1,10 @@
-functio add(a, b) {
-  return a + b;
+function checkEvenOdd(n) {
+  if (n % 2 = 0) {
+    console.log("Even");
+  } else {
+    console.log("Odd");
+  }
 }
 
-console.log(add(5));
-
+let num;
+console.log(checkEvenOdd(num));
