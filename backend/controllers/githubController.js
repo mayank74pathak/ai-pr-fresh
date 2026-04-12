@@ -73,7 +73,7 @@ ${explanation}
 
     res.sendStatus(200);
   } catch (err) {
-    console.error("Error:", err.message);
+    console.error("FULL ERROR:", err.response?.data || err.message);
     res.sendStatus(500);
   }
 };
