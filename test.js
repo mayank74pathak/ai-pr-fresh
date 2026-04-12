@@ -1,6 +1,6 @@
-function add(a, b) {
+functio add(a, b) {
   return a + b;
 }
 
 console.log(add(5));
-console.log(undefinedVar)
+
