@@ -4,9 +4,12 @@ import dotenv from "dotenv";
 import reviewRoutes from "./routes/reviewRoutes.js";
 import githubRoutes from "./routes/githubRoutes.js";
 
- 
 dotenv.config();
 
+console.log(
+  "TOKEN CHECK:",
+  process.env.GITHUB_TOKEN ? "✅ Loaded" : "❌ Missing",
+);
 const app = express();
 
 app.use(cors());

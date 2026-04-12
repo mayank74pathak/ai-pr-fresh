@@ -17,6 +17,8 @@ export const handleWebhook = async (req, res) => {
 
   try {
     const pr = req.body.pull_request;
+    console.log("PR URL:", pr.url); // ← ADD
+    console.log("Comments URL:", pr.comments_url); // ← ADD
 
     // ✅ Get changed files
     const files = await axios.get(pr.url + "/files", {
@@ -24,7 +26,7 @@ export const handleWebhook = async (req, res) => {
         Authorization: `Bearer ${process.env.GITHUB_TOKEN}`,
       },
     });
-
+    console.log("Files fetched ✅");
     let code = "";
 
     files.data.forEach((file) => {
@@ -37,10 +39,9 @@ export const handleWebhook = async (req, res) => {
     code = code.slice(0, 5000);
 
     // ✅ Call your AI reviewer
-    const aiRes = await axios.post(
-      "http://localhost:5001/api/review",
-      { code }
-    );
+    const aiRes = await axios.post("http://localhost:5001/api/review", {
+      code,
+    });
 
     const { bugs, suggestions, explanation } = aiRes.data;
 
@@ -65,7 +66,7 @@ ${explanation}
         headers: {
           Authorization: `Bearer ${process.env.GITHUB_TOKEN}`,
         },
-      }
+      },
     );
 
     console.log("Comment posted ✅");
