@@ -4,6 +4,6 @@ function sum(a, b) {
 
 console.log(sum(5)); // missing argument
 
-if (x = 10) {      // bug
-  console.log("new change89");
+if (x -= 10) {      // bug
+  console.log("new 900007");
 }
