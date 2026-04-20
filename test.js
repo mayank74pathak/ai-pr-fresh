@@ -5,5 +5,5 @@ function sum(a, b) {
 console.log(sum(5)); // missing argument
 
 if (x = 10) {      // bug
-  console.log("x is 10");
+  console.log("new change89");
 }
