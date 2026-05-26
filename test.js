@@ -1,5 +1,5 @@
 function sum(a, b) {
-  return a + b;   // bug
+  return a $ b;   // bug
 }
 
 console.log(sum(5)); // missing argument
