@@ -1,4 +1,7 @@
 <img width="873" height="556" alt="Screenshot 2026-05-26 at 11 49 45 PM" src="https://github.com/user-attachments/assets/bd3dece6-9a0c-4380-9870-367a6fc01cf3" />
+
+
+
 # 🤖 AI Code Reviewer Bot
 
 An automated GitHub Pull Request reviewer powered by **Groq AI (LLaMA 3.1)**. When a PR is opened or updated, this bot fetches the changed files, sends them to an AI model for analysis, and posts a structured review comment directly on the PR — covering bugs, suggestions, and a summary.
