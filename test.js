@@ -1,5 +1,5 @@
-function checkEvenOdd(n) {
-  if (n % 2 = 0) {
+fution checkEvenOdd(n) {
+  if (n % 2 === 0) {
     console.log("Even");
   }  {
     consol.lo("Odd"
