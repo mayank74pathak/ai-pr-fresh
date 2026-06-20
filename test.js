@@ -1,10 +1,9 @@
-function checkEvenOdd(n) {
-  if (n % 2 = 0) {
-    console.log("Even");
-  }  {
-    consol.lo("Odd"
-  }
+function sum(a, b) {
+  return a ++ b;   // bug
 }
 
-let num;
-console.log(checkEvenOdd(num));
+console.log(sum(5)); // missing argument
+
+if (x = 10) {      // bug
+  console.log("x is 10");
+}
