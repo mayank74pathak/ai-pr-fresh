@@ -15,11 +15,11 @@ export const reviewCode = async (req, res) => {
       });
     }
 
-    // ✅ Strong prompt
+    // ✅ Strong prompt (improved)
     const prompt = `
 You are a strict code reviewer.
 
-Return ONLY valid JSON. No explanation outside JSON.
+Return ONLY valid JSON. No extra text.
 
 Format:
 {
@@ -30,25 +30,22 @@ Format:
 
 Rules:
 - ALWAYS report syntax errors
-- DO NOT add extra text
+- DO NOT repeat bugs
+- DO NOT hallucinate
 - DO NOT use markdown
+- Keep output concise
 
 Code:
 ${code}
 `;
 
-    // ✅ Groq API call (FINAL FIX)
+    // ✅ API call
     const response = await axios.post(
       "https://api.groq.com/openai/v1/chat/completions",
       {
         model: "llama-3.1-8b-instant",
-        messages: [
-          {
-            role: "user",
-            content: prompt,
-          },
-        ],
-        temperature: 0.2,
+        messages: [{ role: "user", content: prompt }],
+        temperature: 0.1,
       },
       {
         headers: {
@@ -58,52 +55,61 @@ ${code}
       },
     );
 
-    const text = response.data.choices[0].message.content;
-
-    console.log("Raw AI Response:", text);
+    const raw = response.data.choices[0].message.content;
+    console.log("Raw AI Response:", raw);
 
     // ✅ Clean response
-    let cleanedText = text.trim();
-
-    cleanedText = cleanedText
+    let cleaned = raw
       .replace(/```json/gi, "")
       .replace(/```/g, "")
       .replace(/`/g, "")
       .trim();
 
-    // ✅ Extract JSON safely
-    const match = cleanedText.match(/\{[\s\S]*\}/);
-
-    if (match) {
-      cleanedText = match[0];
-    }
-
-    console.log("Final Cleaned:", cleanedText);
+    // ✅ Extract JSON safely (non-greedy)
+    const match = cleaned.match(/\{[\s\S]*?\}/);
 
     let parsed;
 
-    try {
-      parsed = JSON.parse(cleanedText);
-    } catch (error) {
-      console.error("Parse failed:", cleanedText);
+    if (match) {
+      try {
+        parsed = JSON.parse(match[0]);
+      } catch (err) {
+        parsed = null;
+      }
+    }
 
+    // ✅ Fallback if parsing fails
+    if (!parsed || typeof parsed !== "object") {
       parsed = {
-        bugs: ["Parsing error: invalid AI response"],
-        suggestions: [],
-        explanation: cleanedText,
+        bugs: ["AI parsing failed"],
+        suggestions: ["Try again or reduce input size"],
+        explanation: cleaned.slice(0, 200),
       };
     }
 
+    // ✅ SANITIZE OUTPUT (VERY IMPORTANT)
+    const bugs = Array.isArray(parsed.bugs)
+      ? [...new Set(parsed.bugs)].slice(0, 10)
+      : [];
+
+    const suggestions = Array.isArray(parsed.suggestions)
+      ? [...new Set(parsed.suggestions)].slice(0, 10)
+      : [];
+
+    const explanation =
+      typeof parsed.explanation === "string"
+        ? parsed.explanation.slice(0, 200)
+        : "";
+
     // ✅ Final response
     res.json({
-      bugs: parsed.bugs || [],
-      suggestions: parsed.suggestions || [],
-      explanation: parsed.explanation || "",
+      bugs,
+      suggestions,
+      explanation,
     });
   } catch (error) {
     console.error("GROQ ERROR:", error.response?.data || error.message);
 
-    // ✅ fallback (important)
     res.json({
       bugs: ["AI service unavailable"],
       suggestions: ["Check code manually"],
